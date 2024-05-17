@@ -1,0 +1,151 @@
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SIRINA 128
+#define VISINA 64
+
+const int buttonPin = 8;
+
+
+#define MAX_DOLZINA 30
+
+int premik = 0;
+byte smer = 0;  // 0 -> desno, 1-> dol, 2 -> levo, 3-> gor
+int timer = 0;
+
+
+byte x_hrana = 0;
+byte y_hrana = 0;
+
+bool igralec[8][13] = {
+  {0,0,0,1,0,0,0,0,0,1,0,0,0},
+  {0,0,0,0,1,0,0,0,1,0,0,0,0}, 
+  {0,0,0,1,1,1,1,1,1,1,0,0,0}, 
+  {0,0,1,1,0,1,1,1,0,1,1,0,0},
+  {0,1,1,1,1,1,1,1,1,1,1,1,0},
+  {0,1,0,1,1,1,1,1,1,1,0,1,0},
+  {0,1,0,1,0,0,0,0,0,1,0,1,0},
+  {0,0,0,0,1,1,0,1,1,0,0,0,0}};
+
+bool ladja[8][13] = {
+  {0,0,0,0,0,0,1,0,0,0,0,0,0},
+  {0,0,0,0,0,0,1,0,0,0,0,0,0}, 
+  {0,0,0,0,0,0,1,0,0,0,0,0,0}, 
+  {0,0,0,0,0,1,1,1,0,0,0,0,0},
+  {0,0,0,0,0,1,0,1,0,0,0,0,0},
+  {0,1,0,1,1,1,0,1,1,1,0,1,0},
+  {0,1,1,1,1,1,0,1,1,1,1,1,0},
+  {0,0,1,1,0,0,1,0,0,1,1,0,0}};
+
+
+Adafruit_SSD1306 pepi(SIRINA, VISINA);
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(buttonPin, INPUT_PULLUP);
+  pepi.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  pepi.clearDisplay();
+}
+
+double x = SIRINA / 2;
+double y = VISINA / 2;
+
+void loop() {
+  // pepi.setCursor(0, 0);
+  // pepi.print("Snak6e");
+  beriJoystick();
+  premakni();
+  priklicladje();
+  pepi.display();
+  // v_premik();
+  strel();
+}
+  
+
+
+void beriJoystick() {
+  int jx = analogRead(A0);
+  int jy = analogRead(A1);
+  if (jx >= 700) {
+    smer = 0;
+  } else if (jx <= 300) {
+    smer = 2;
+  }
+}
+
+void premakni() {
+    switch (smer) {
+    case 0:
+    if(x != 0){
+      x -= 1;
+    }
+      break;
+    case 2:
+    if(x!=116){
+      x += 1;
+    }
+      break;
+  }
+  
+  }
+
+
+
+void priklicladje(){
+  for(int i = 0; i < 8; i++){
+    
+    for(int e = 0; e < 13; e++){
+      pepi.drawPixel((e + x), (i+ 50), ladja[i][e]); //e == xlinija | i == ylinija
+      
+    }
+  }
+  
+}
+
+void v_premik(){
+  for(int m = 0; m < 23; m++){
+    aliend();
+    pepi.display();
+    delay(100);
+    premik += 1;
+  }
+  for(int m = 0; m < 23; m++){
+    aliend();
+    pepi.display();
+    delay(100);
+    premik -= 1;
+  }
+
+}
+
+void aliend(){
+  for(int vrsta = 0; vrsta < 3; vrsta++){
+      for(int v = 0; v < 7; v++){
+    for(int i = 0; i < 8; i++){
+      for(int e = 0; e < 13; e++){
+        pepi.drawPixel(e + premik + (15 * v), (i + (10 * vrsta)), igralec[i][e]); //e == xlinija | i == ylinija
+      }
+    }
+  }
+  }
+  pepi.display();
+}
+
+
+void strel(){
+  int buttonState = digitalRead(buttonPin); // Read the button state
+    if (buttonState == LOW && timer == 0) {
+        metek();
+        timer = 5;
+
+    }else{
+      timer -= 1;
+    }
+
+
+}
+
+void metek(){
+  pepi.drawPixel(x + 3, y, 1);
+}
